@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from discord.ext import commands
 from scrape import PlanScraperForApocryph
+import asyncio
 
 load_dotenv()
 
@@ -35,7 +36,7 @@ async def plan_zajec(ctx):
     await ctx.send(file=discord.File(fp='Plans/PlanJPGS/plan.jpg'))
 
 @bot.command()
-async def plany(ctx, new=False):
+async def plany(ctx):
     """
     :param new: Display only new plans
     :param ctx: context
@@ -43,9 +44,30 @@ async def plany(ctx, new=False):
     Do poprawy w najbliższym czasie !!! Duplikacja kodu
     :return:
     """
-    new_plans = plan_scraper.fresh_plans(new)
-    # Jeżeli trzeba wyświetlić nowe plany
-    if new:
+    plans = plan_scraper.fresh_plans(False)
+    # Jeżeli wyświetlamy wszystkie plany
+    embed_list = discord.Embed(
+        title="Plany zajęć",
+        colour=discord.Colour.blue()
+    )
+    if len(plans) != 0:
+        for plan in plans:
+            embed_list.add_field(name=plan['semestr'], value=plan['link'], inline=False)
+        await ctx.send(embed=embed_list)
+    else:
+        embed_list = discord.Embed(
+            title="Plany zajęć",
+            colour=discord.Colour.blue()
+        )
+        embed_list.set_image(url='https://www.weeren.net/nothing.gif')
+        await ctx.send(embed=embed_list)
+
+@bot.command()
+async def new_plans_checker(ctx,channel):
+    await bot.wait_until_ready()
+
+    while not bot.is_closed():
+        new_plans = plan_scraper.fresh_plans(False)
         embed_list = discord.Embed(
             title="Nowe plany zajęć",
             colour=discord.Colour.red()
@@ -54,6 +76,7 @@ async def plany(ctx, new=False):
             for plan in new_plans:
                 embed_list.add_field(name=plan['semestr'], value=plan['link'], inline=False)
             await ctx.send(embed=embed_list)
+
         else:
             embed_list = discord.Embed(
                 title="Nowe Plany zajęć",
@@ -61,24 +84,10 @@ async def plany(ctx, new=False):
             )
             embed_list.set_image(url='https://www.weeren.net/nothing.gif')
             await ctx.send(embed=embed_list)
-    # Jeżeli wyświetlamy wszystkie plany
-    else:
-        embed_list = discord.Embed(
-            title="Plany zajęć",
-            colour=discord.Colour.blue()
-        )
-        if len(new_plans) != 0:
-            for plan in new_plans:
-                embed_list.add_field(name=plan['semestr'], value=plan['link'], inline=False)
-            await ctx.send(embed=embed_list)
-        else:
-            embed_list = discord.Embed(
-                title="Plany zajęć",
-                colour=discord.Colour.blue()
-            )
-            embed_list.set_image(url='https://www.weeren.net/nothing.gif')
-            await ctx.send(embed=embed_list)
+        await asyncio.sleep(10)
 
+
+bot.loop.create_task(new_plans_checker())
 
 bot.run(os.getenv('BOT_TOKEN'))
 
