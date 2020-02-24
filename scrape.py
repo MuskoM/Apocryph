@@ -2,7 +2,6 @@ import wget
 import requests
 import tempfile
 import os
-import PyPDF2
 from bs4 import BeautifulSoup
 from pdf2image import convert_from_path
 

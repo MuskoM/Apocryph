@@ -1,13 +1,13 @@
 import discord
 import os
 from dotenv import load_dotenv
-from discord.ext import commands
+from discord.ext import commands,tasks
 from scrape import PlanScraperForApocryph
 import asyncio
 
 load_dotenv()
 
-bot = commands.Bot(command_prefix='^', description='First iteration of Apocryph')
+bot = commands.Bot(command_prefix='|', description='First iteration of Apocryph')
 
 # Custom class for scraping data from the university site
 plan_scraper = PlanScraperForApocryph()
@@ -62,32 +62,71 @@ async def plany(ctx):
         embed_list.set_image(url='https://www.weeren.net/nothing.gif')
         await ctx.send(embed=embed_list)
 
+
+@tasks.loop(seconds=10)
+async def new_plans_checker(ctx):
+    await ctx.send("Iteration Done")
+
 @bot.command()
-async def new_plans_checker(ctx,channel):
-    await bot.wait_until_ready()
+async def dz(ctx, *args):
+    await ctx.send(f'**Dodano zadanie** {args[0]}\n'
+                   f'**Cel:** {args[1]}')
+    try:
+        quests = open('etc/quests.txt', 'a')
+    except FileNotFoundError:
+        quests = open('etc/quests.txt', 'w')
+    for item in args:
+        quests.write(f'{item} ')
+    quests.write('\n')
 
-    while not bot.is_closed():
-        new_plans = plan_scraper.fresh_plans(False)
+
+@bot.command()
+async def wz(ctx):
+    try:
+        quest_file = open('etc/quests.txt', 'r')
+        quest_list = quest_file.readlines()
         embed_list = discord.Embed(
-            title="Nowe plany zajęć",
-            colour=discord.Colour.red()
+            title="Quest List",
+            colour=discord.Colour.blue()
         )
-        if len(new_plans) != 0:
-            for plan in new_plans:
-                embed_list.add_field(name=plan['semestr'], value=plan['link'], inline=False)
-            await ctx.send(embed=embed_list)
 
-        else:
-            embed_list = discord.Embed(
-                title="Nowe Plany zajęć",
-                colour=discord.Colour.red()
-            )
-            embed_list.set_image(url='https://www.weeren.net/nothing.gif')
-            await ctx.send(embed=embed_list)
-        await asyncio.sleep(10)
+        for line in quest_list:
+            splittedline = line.split(" ")
+            embed_list.add_field(name=splittedline[0],
+                                 value=' '.join(splittedline[1:len(splittedline) - 1]), inline=False)
+        await ctx.send(embed=embed_list)
+    except FileNotFoundError:
+        await ctx.send('Brak zadań na liście :)')
 
 
-bot.loop.create_task(new_plans_checker())
+@bot.command()
+async def uz(ctx, indx):
+    quest_file_read = open('etc/quests.txt', 'r')
+    lines = []
 
-bot.run(os.getenv('BOT_TOKEN'))
+    if indx == 'all':
+        quest_file_read.close()
+        os.remove('etc/quests.txt')
+        await ctx.send('Usunieto wszystkie zadania!!!')
+    else:
+        for i, line in enumerate(quest_file_read):
+            if i != int(indx) - 1:
+                lines.append(line)
+            elif i == int(indx) - 1:
+                deleted_task = line
 
+        splitted_line = deleted_task.split(" ")
+        cel = ' '.join(splitted_line[1:len(splitted_line) - 1])
+        quest_file_write = open('etc/quests.txt', 'w')
+        quest_file_write.writelines(lines)
+        await ctx.send(f'**Usunieto zadanie** {splitted_line[0]}\n'
+                       f'**Cel:** {cel}')
+
+bot.run(os.getenv('XENO_TOKEN'))
+
+# discord.py
+# requests
+# wget
+# python-dotenv
+# beautifulsoup4
+# pdf2image
