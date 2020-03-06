@@ -24,9 +24,3 @@ async def on_ready():
 
 bot.run(os.getenv('XENO_TOKEN'))
 
-# discord.py
-# requests
-# wget
-# python-dotenv
-# beautifulsoup4
-# pdf2image
