@@ -9,6 +9,10 @@ bot = commands.Bot(command_prefix='=', description='Bot wspomagający studentów
 
 bot.load_extension('Plany')
 bot.load_extension('ListaZadan')
+bot.load_extension('Janitor')
+
+
+
 
 @bot.event
 async def on_ready():

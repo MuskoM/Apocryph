@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import os
 
 
 class ListaZadan(commands.Cog):
@@ -8,8 +9,8 @@ class ListaZadan(commands.Cog):
 
     @commands.command(name="dodajZadanie",
                       aliases=['dz'],
-                      usage="Pierwszy parametr: nagłówek zadania\n"
-                            "Drugi parametr(W \" \"): Cel zadania "
+                      usage="\nPierwszy parametr: nagłówek zadania\n"
+                            "Drugi parametr(W \"\"): Cel zadania "
                       )
     async def dodajZadanie(self, ctx, *args):
         """
